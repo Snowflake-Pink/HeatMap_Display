@@ -20,7 +20,7 @@ import { ref, onMounted } from 'vue'
 import { ElConfigProvider, ElEmpty } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import HeatmapViewer from './src/components/HeatmapViewer/index.vue'
-import type { RawHeatmapData } from './src/utils/dataProcessor'
+import type { RawHeatmapData } from '@/utils/dataProcessor.ts'
 
 const heatmapData = ref<RawHeatmapData[]>([])
 const loading = ref(true)

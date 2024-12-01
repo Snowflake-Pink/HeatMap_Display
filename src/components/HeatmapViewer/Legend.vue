@@ -30,8 +30,14 @@ const formatValue = (value: number) => {
 .legend-gradient {
   height: 20px;
   width: 200px;
-  background: linear-gradient(to right, #ffffff, #ff0000);
+  background: linear-gradient(to right, 
+    rgb(255, 255, 255),
+    rgb(255, 200, 200),
+    rgb(255, 100, 100),
+    rgb(255, 0, 0)
+  );
   border: 1px solid #ddd;
+  border-radius: 2px;
 }
 
 .legend-labels {

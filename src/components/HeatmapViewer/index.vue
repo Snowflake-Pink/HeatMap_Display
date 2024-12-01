@@ -35,36 +35,54 @@ const props = defineProps<{
 const currentHour = ref(0)
 const gridContainer = ref<HTMLElement | null>(null)
 
-// 处理数据
 const hourlyData = computed(() => {
   return HeatmapDataProcessor.aggregateByHour(props.data)
 })
 
-// 计算当前显示数据的值范围
 const valueRange = computed(() => {
   return HeatmapDataProcessor.calculateValueRange(hourlyData.value)
 })
 
-// 获取指定位置的值
 const getCellValue = (row: number, col: number): number => {
   const currentData = hourlyData.value.get(currentHour.value) || {}
-  const key = `${col},${row}` // 注意：数据中的格式是 "x,y"
+  const key = `${row},${col}`
   return currentData[key] || 0
 }
 
-// 计算单元格的样式（包括背景色）
+const calculateColorIntensity = (value: number, min: number, max: number): number => {
+  if (value === 0) return 0
+  
+  const baseIntensity = 0.3
+  
+  if (max === min) return baseIntensity
+  
+  const normalizedValue = (value - min) / (max - min)
+  const additionalIntensity = 0.7 * normalizedValue
+  
+  return baseIntensity + additionalIntensity
+}
+
 const getCellStyle = (row: number, col: number) => {
   const value = getCellValue(row, col)
   const [min, max] = valueRange.value
-  const intensity = max > min ? (value - min) / (max - min) : 0
+  const intensity = calculateColorIntensity(value, min, max)
+
+  if (value === 0) {
+    return {
+      backgroundColor: '#f7c8cf',
+      color: '#333'
+    }
+  }
 
   return {
-    backgroundColor: `rgba(255, 0, 0, ${intensity})`
+    backgroundColor: `rgb(255, ${Math.round((1 - intensity) * 200)}, ${Math.round((1 - intensity) * 200)})`,
+    color: intensity > 0.5 ? '#fff' : '#333',
+    fontWeight: 'bold'
   }
 }
 
 const updateHeatmap = () => {
-  // 可以在这里添加更新时的额外逻辑
+  // 更新逻辑如果需要
 }
 </script>
 
@@ -75,6 +93,7 @@ const updateHeatmap = () => {
   gap: 20px;
   align-items: center;
   padding: 20px;
+  background-color: #f5f5f5;
 }
 
 .heatmap-grid {
@@ -84,6 +103,8 @@ const updateHeatmap = () => {
   background-color: #ddd;
   padding: 1px;
   width: fit-content;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .grid-row {
@@ -99,7 +120,11 @@ const updateHeatmap = () => {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #333;
   transition: background-color 0.3s ease;
+}
+
+.grid-cell:hover {
+  transform: scale(1.05);
+  z-index: 1;
 }
 </style>
