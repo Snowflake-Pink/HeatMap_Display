@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import { groupBy } from 'lodash';
 
 export interface RawHeatmapData {
   timestamp: string;
@@ -10,60 +9,43 @@ export interface RawHeatmapData {
 export type Position = `${number},${number}`;
 
 export class HeatmapDataProcessor {
-  // 按小时聚合数据
-  static aggregateByHour(rawData: RawHeatmapData[]): Map<number, Record<Position, number>> {
-    const hourlyData = new Map();
-    
-    // 初始化24小时的数据
-    for (let i = 0; i < 24; i++) {
-      hourlyData.set(i, {});
-    }
-    
-    // 按小时分组
-    const groupedData = groupBy(rawData, item => 
-      dayjs(item.timestamp).hour()
-    );
+  static getMinuteFromTimestamp(timestamp: string): number {
+    const date = dayjs(timestamp);
+    return date.hour() * 60 + date.minute();
+  }
 
-    // 处理每个小时的数据
-    Object.entries(groupedData).forEach(([hour, data]) => {
-      const hourCounts: Record<Position, number> = {};
-      
-      // 合并同一小时内的数据
-      data.forEach(item => {
-        Object.entries(item.counts).forEach(([pos, count]) => {
-          hourCounts[pos as Position] = (hourCounts[pos as Position] || 0) + count;
+  // 获取指定分钟及其前60分钟的累计数据
+  static getAggregatedDataForMinute(
+    data: RawHeatmapData[],
+    targetMinute: number,
+    baseDate: string
+  ): Record<Position, number> {
+    const targetTime = dayjs(baseDate).add(targetMinute, 'minute');
+    const startTime = targetTime.subtract(60, 'minute');
+    
+    // 初始化网格数据
+    const aggregatedData: Record<Position, number> = {};
+    
+    // 筛选并累加时间范围内的数据
+    data.forEach(entry => {
+      const entryTime = dayjs(entry.timestamp);
+      if (entryTime.isAfter(startTime) && entryTime.isBefore(targetTime) || entryTime.isSame(targetTime)) {
+        Object.entries(entry.counts).forEach(([pos, count]) => {
+          aggregatedData[pos as Position] = (aggregatedData[pos as Position] || 0) + count;
         });
-      });
-
-      hourlyData.set(parseInt(hour), hourCounts);
-    });
-
-    return hourlyData;
-  }
-
-  // 计算热力值范围
-  static calculateValueRange(data: Map<number, Record<Position, number>>): [number, number] {
-    let min = Infinity;
-    let max = -Infinity;
-
-    data.forEach(hourData => {
-      const values = Object.values(hourData);
-      if (values.length > 0) {
-        min = Math.min(min, Math.min(...values));
-        max = Math.max(max, Math.max(...values));
       }
     });
-
-    return [min === Infinity ? 0 : min, max === -Infinity ? 0 : max];
+    
+    return aggregatedData;
   }
 
-  static generateEmptyGrid(size: number): Record<Position, number> {
-    const grid: Record<Position, number> = {};
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        grid[`${i},${j}` as Position] = 0;
-      }
-    }
-    return grid;
+  static calculateValueRange(data: Record<Position, number>): [number, number] {
+    const values = Object.values(data);
+    if (values.length === 0) return [0, 0];
+    
+    return [
+      Math.min(...values),
+      Math.max(...values)
+    ];
   }
 }

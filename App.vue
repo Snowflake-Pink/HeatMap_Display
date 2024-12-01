@@ -5,6 +5,7 @@
         <HeatmapViewer
           v-if="heatmapData.length"
           :data="heatmapData"
+          :base-date="baseDate"
         />
         <el-empty v-else description="暂无数据" />
       </div>
@@ -16,21 +17,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { ElConfigProvider, ElEmpty } from 'element-plus'
+import {onMounted, ref} from 'vue'
+import {ElConfigProvider, ElEmpty} from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
-import HeatmapViewer from './src/components/HeatmapViewer/index.vue'
-import type { RawHeatmapData } from '@/utils/dataProcessor.ts'
+import HeatmapViewer from '@/components/HeatmapViewer/index.vue'
+import type {RawHeatmapData} from '@/utils/dataProcessor.ts'
 
 const heatmapData = ref<RawHeatmapData[]>([])
 const loading = ref(true)
+const baseDate = ref('2024-11-19')
 
 const loadHeatmapData = async () => {
   try {
     loading.value = true
     const response = await fetch('/data/heat_map_data.json')
-    const data = await response.json()
-    heatmapData.value = data
+    heatmapData.value = await response.json()
   } catch (error) {
     console.error('Failed to load heatmap data:', error)
   } finally {

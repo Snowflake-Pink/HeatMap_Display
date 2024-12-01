@@ -1,13 +1,13 @@
 <template>
   <div class="time-controller">
+    <div class="current-time">{{ formatCurrentTime }}</div>
     <el-slider
-      v-model="localHour"
+      v-model="localMinute"
       :min="0"
-      :max="23"
+      :max="1439"
       :step="1"
-      :format-tooltip="formatHour"
-      show-stops
-      @change="handleHourChange"
+      :format-tooltip="formatMinuteTooltip"
+      @change="handleMinuteChange"
     />
     <div class="time-controls">
       <el-button @click="playPause" :type="isPlaying ? 'primary' : 'default'">
@@ -29,34 +29,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
-import { ElButton, ElSelect, ElOption, ElSlider } from 'element-plus'
-import { VideoPlay, Pause } from '@element-plus/icons-vue'
-import { formatHourString } from '@/utils/timeUtils'
+import { ref, watch, onUnmounted, computed } from 'vue'
+import dayjs from 'dayjs'
 
 const props = defineProps<{
   modelValue: number
+  baseDate: string
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void
 }>()
 
-const localHour = ref(props.modelValue)
+const localMinute = ref(props.modelValue)
 const isPlaying = ref(false)
-const playbackSpeed = ref(1)
+const playbackSpeed = ref(64)
 let playInterval: number | null = null
 
 const speedOptions = [
-  { label: '0.5x', value: 0.5 },
   { label: '1x', value: 1 },
-  { label: '2x', value: 2 },
-  { label: '4x', value: 4 }
+  { label: '4x', value: 4 },
+  { label: '16x', value: 16 },
+  { label: '32x', value: 32 },
+  { label: '64x', value: 64 },
+  { label: '128x', value: 128 },
+  { label: '256x', value: 256 }
 ]
 
-const formatHour = (val: number) => formatHourString(val)
+const formatMinuteTooltip = (minute: number) => {
+  const hours = Math.floor(minute / 60)
+  const minutes = minute % 60
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
 
-const handleHourChange = (value: number) => {
+const formatCurrentTime = computed(() => {
+  const date = dayjs(props.baseDate).add(localMinute.value, 'minute')
+  return date.format('YYYY-MM-DD HH:mm')
+})
+
+const handleMinuteChange = (value: number) => {
   emit('update:modelValue', value)
 }
 
@@ -73,8 +84,8 @@ const startPlayback = () => {
   if (playInterval) return
   
   playInterval = window.setInterval(() => {
-    localHour.value = (localHour.value + 1) % 24
-    emit('update:modelValue', localHour.value)
+    localMinute.value = (localMinute.value + 1) % 1440
+    emit('update:modelValue', localMinute.value)
   }, 1000 / playbackSpeed.value)
 }
 
@@ -93,7 +104,7 @@ watch(playbackSpeed, () => {
 })
 
 watch(() => props.modelValue, (newVal) => {
-  localHour.value = newVal
+  localMinute.value = newVal
 })
 
 onUnmounted(() => {

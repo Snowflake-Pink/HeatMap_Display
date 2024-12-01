@@ -16,7 +16,8 @@
     <Legend :min="valueRange[0]" :max="valueRange[1]" />
     
     <TimeController
-      v-model="currentHour"
+      v-model="currentMinute"
+      :base-date="baseDate"
       @update:modelValue="updateHeatmap"
     />
   </div>
@@ -30,23 +31,27 @@ import { HeatmapDataProcessor, type RawHeatmapData } from '@/utils/dataProcessor
 
 const props = defineProps<{
   data: RawHeatmapData[]
+  baseDate: string
 }>()
 
-const currentHour = ref(0)
+const currentMinute = ref(0)
 const gridContainer = ref<HTMLElement | null>(null)
 
-const hourlyData = computed(() => {
-  return HeatmapDataProcessor.aggregateByHour(props.data)
+const currentData = computed(() => {
+  return HeatmapDataProcessor.getAggregatedDataForMinute(
+    props.data,
+    currentMinute.value,
+    props.baseDate
+  )
 })
 
 const valueRange = computed(() => {
-  return HeatmapDataProcessor.calculateValueRange(hourlyData.value)
+  return HeatmapDataProcessor.calculateValueRange(currentData.value)
 })
 
 const getCellValue = (row: number, col: number): number => {
-  const currentData = hourlyData.value.get(currentHour.value) || {}
   const key = `${row},${col}`
-  return currentData[key] || 0
+  return currentData.value[key] || 0
 }
 
 const calculateColorIntensity = (value: number, min: number, max: number): number => {
