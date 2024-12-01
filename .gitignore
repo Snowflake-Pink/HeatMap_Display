@@ -1,0 +1,4 @@
+.idea/
+node_modules/
+
+public/data/heat_map_data.json
