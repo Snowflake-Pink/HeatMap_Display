@@ -27,7 +27,7 @@
 import { ref, computed } from 'vue'
 import TimeController from './TimeController.vue'
 import Legend from './Legend.vue'
-import { HeatmapDataProcessor, type RawHeatmapData } from '@/utils/dataProcessor'
+import { HeatmapDataProcessor, type RawHeatmapData, type Position } from '@/utils/dataProcessor'
 
 const props = defineProps<{
   data: RawHeatmapData[]
@@ -50,7 +50,7 @@ const valueRange = computed(() => {
 })
 
 const getCellValue = (row: number, col: number): number => {
-  const key = `${row},${col}`
+  const key = `${row},${col}` as Position
   return currentData.value[key] || 0
 }
 

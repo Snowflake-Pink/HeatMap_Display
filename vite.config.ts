@@ -8,5 +8,8 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
+  },
+  server: {
+    port: 8080  // 在这里修改您想要的端口号
   }
 })

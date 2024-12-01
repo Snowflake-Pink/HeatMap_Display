@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 export interface RawHeatmapData {
   timestamp: string;
   grid_size: number[];
-  counts: Record<string, number>;
+  counts: Record<Position, number>;
 }
 
 export type Position = `${number},${number}`;
