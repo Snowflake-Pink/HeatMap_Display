@@ -12,7 +12,7 @@ A Vue.js-based visualization tool for displaying indoor human traffic data as a 
 - Day.js for time manipulation
 - Vite as build tool
 
-## Prerequisites
+## Requirements  
 
 - Node.js (v16 or above)
 - npm or yarn
